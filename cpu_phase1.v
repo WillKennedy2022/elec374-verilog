@@ -5,7 +5,7 @@ the instructions */
 
 `timescale 1ns/10ps
 
-module cpuPhase1(
+module cpu_phase1(
   //the input (in.port) and output (out.port) connects the CPU to the outside world
  
    input PCout,
@@ -15,24 +15,28 @@ module cpuPhase1(
 	input R2Out,
 	input R4Out,
 	input MARin,
+	input Zin,
 	input PCin,
-	input MDRin,
+	input MDREnable,
 	input IRin,
 	input Yin,
 	input IncPC,
-	input MDRRead,
-   input wire [4:0] operation,
-	input busMuxInR5,
-	input busMuxInR2,
-	input busMuxInR4,
+	input MDRread,
+   input [4:0] operation,
+	input R5Enable,
+	input R2Enable,
+	input R4Enable,
 	input clk, 
-	input [31:0] mDataIn
+	input [31:0] mDataIn,
+	input BAout
 	//input wire [31:0] inPortIn,
 	//output wire [31:0] inPortOut
 
  
 );
-  
+  //for section 2.3
+  wire [31:0] busMuxInR0_to_AND;
+	
   //define 32-to-5 encoder input/output wires
   wire [31:0] encoderInput;
   wire [4:0] encoderOutput;//select signals for MUX
@@ -78,10 +82,10 @@ module cpuPhase1(
   //inputs to the bus MUX (from our registers, output q)
   wire [31:0] busMuxInR0;
   wire [31:0] busMuxInR1;
-  //wire [31:0] busMuxInR2;
+  wire [31:0] busMuxInR2;
   wire [31:0] busMuxInR3;
-  //wire [31:0] busMuxInR4;
-  //wire [31:0] busMuxInR5;
+  wire [31:0] busMuxInR4;
+  wire [31:0] busMuxInR5;
   wire [31:0] busMuxInR6;
   wire [31:0] busMuxInR7;
   wire [31:0] busMuxInR8;
@@ -101,17 +105,21 @@ module cpuPhase1(
   wire [31:0] busMuxInInPort;
   wire [31:0] busMuxInC;
   wire [31:0] busMuxInY;
+  wire [31:0] busMuxOutMDR;
   
   //enable signals for registers
-  wire R1Enable, R2Enable, R3Enable, R4Enable, R5Enable, R6Enable, R7Enable, R8Enable, R9Enable, 
+  wire R1Enable, /*R2Enable,*/ R3Enable, /*R4Enable, R5Enable,*/ R6Enable, R7Enable, R8Enable, R9Enable, 
   R10Enable, R11Enable, R12Enable, R13Enable, R14Enable, R15Enable, hiEnable, loEnable, zHiEnable, 
-  zLoEnable, pcEnable, MDREnable, inPortEnable, CEnable; 
+  zLoEnable, pcEnable, /*MDREnable,*/ inPortEnable, CEnable; 
   
   wire [31:0] busMuxOut; //feed into registers as the input from the bus
   
-  
+  /* Section 2.3 is the revision to the R0 register to support Load and Store instructions */
+	//the original output of R0 is ANDED with the Not of BAout
+	assign busMuxInR0_to_AND = {32{!BAout}} & busMuxInR0; //is this right?
+	GPReg R0(busMuxInR0_to_AND, clk, clr, 1'd0, busMuxOut);
+	
   /* design/instantiate the registers*/
-  GPReg R0(busMuxInR0, clk, clr, 1'd0, busMuxOut);
   GPReg R1(busMuxInR1, clk, clr, R1Enable, busMuxOut);
   GPReg R2(busMuxInR2, clk, clr, R2Enable, busMuxOut);
   GPReg R3(busMuxInR3, clk, clr, R3Enable, busMuxOut);
@@ -130,17 +138,19 @@ module cpuPhase1(
   
   GPReg hiReg(busMuxInHi, clk, clr, hiEnable, busMuxOut);
   GPReg loReg(busMuxInLo, clk, clr, loEnable, busMuxOut);
-  GPReg zHiReg(busMuxInZHi, clk, clr, zHiEnable, busMuxOut);
-  GPReg zLoReg(busMuxInZLo, clk, clr, zLoEnable, busMuxOut);
+  GPReg zHiReg(ALUInZHi, clk, clr, zHiEnable, busMuxOut);
+  GPReg zLoReg(ALUInZLo, clk, clr, zLoEnable, busMuxOut);
   GPReg pcReg(busMuxInPC, clk, clr, pcEnable, busMuxOut);
   GPReg inPortReg(busMuxInInPort, clk, clr, inPortEnable, busMuxOut);
   GPReg cReg(busMuxInC, clk, clr, CEnable, busMuxOut);
   GPReg Y(busMuxInY, clk, clr, Yin, busMuxOut);
+  mdrUnit MDRUnit(busMuxInMDR, busMuxOut, mDataIn, clk, clr, MDREnable, MDRread);
   
-  mux_2X1 MDRmux (busMuxOutMDR, mDataIn, MDRread, muxOut);
-  GPReg MDRReg(busMuxInMDR, clk, clr, MDREnable, busMuxOutMDR);
+  //mux_2X1 MDRmux (busMuxOutMDR, busMuxOut, mDataIn, MDRread);
+  //GPReg MDRReg(busMuxInMDR, clk, clr, MDREnable, busMuxOutMDR);
   
   //now, instantiate the bus
+
   
   bus phase1bus(busMuxOut, busMuxInR0, busMuxInR1, busMuxInR2, busMuxInR3, busMuxInR4,
                 busMuxInR5, busMuxInR6, busMuxInR7, busMuxInR8, busMuxInR9, busMuxInR10,
@@ -153,12 +163,7 @@ module cpuPhase1(
   //MAR, IR, ???
   //alu
   
-  alu aluPhase1(.regZ(busMuxOut), .clock(clk), .clear(clr), .regA(busMuxInY), .regB(busMuxInY), .opcode(operation));
+  alu aluPhase1(.regZH(ALUInZHi), .regZL(ALUInZLo), .clock(clk), .clear(clr), .regA(busMuxInY), .regB(busMuxOut), .opcode(operation));
   
   endmodule
-    
-  
-    
-  
-  
   

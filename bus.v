@@ -4,7 +4,7 @@ a combination of smaller multiplxers. the five select signal inputs for this mul
 module bus(
   output [31:0] busMuxOut,
   input [31:0] R0In, R1In, R2In, R3In, R4In, R5In, R6In, R7In, R8In, R9In, R10In, 
-  R11In, R12In, R13In, R14In, R15In, hiIn, loIn, zHighIn, zLoIn, pcIn, MDRin,
+  R11In, R12In, R13In, R14In, R15In, hiIn, loIn, zHighIn, zLoIn, pcIn, MDRIn,
   inPortIn, C_sign_extended,
   input R0Out, R1Out, R2Out, R3Out, R4Out, R5Out, R6Out, R7Out,
   R8Out, R9Out, R10Out, R11Out, R12Out, R13Out, R14Out, R15Out, hiOut, loOut,
@@ -60,7 +60,7 @@ module bus(
   else if (pcOut == 1)
     busOutput <= pcIn;
   else if (MDRout == 1)
-    busOutput <= MDRin;
+    busOutput <= MDRIn;
   else if (inPortOut == 1)
     busOutput <= inPortIn;
   else if (Cout == 1)
