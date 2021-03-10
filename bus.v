@@ -65,6 +65,8 @@ module bus(
     busOutput <= inPortIn;
   else if (Cout == 1)
     busOutput <= C_sign_extended;
+	else
+		busOutput <= 0;
   end
 
   assign busMuxOut = busOutput;

@@ -85,6 +85,11 @@ module alu (
 				regZL <= not_op_out[31:0]; //sets the 32-bit output wire regZ to the 32-bit sum of the NOT operation 
 				regZH <= 32'd0; //initialization
 			end
+			
+			default: begin // Default to prevent latching
+				regZL <= 32'd0; 
+				regZH <= 32'd0; 
+			end 
 		endcase
 	end
 	//instantiate the ALU module operations  

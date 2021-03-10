@@ -9,8 +9,8 @@ module cpu_phase1(
   //the input (in.port) and output (out.port) connects the CPU to the outside world
  
    input PCout,
-	input ZHighout,
-	input ZLowout,
+	input ZHighOut,
+	input ZLowOut,
 	input MDRout,
 	input R2Out,
 	input R4Out,
@@ -26,7 +26,7 @@ module cpu_phase1(
 	input R5Enable,
 	input R2Enable,
 	input R4Enable,
-	input clk, 
+	input clk, clr,
 	input [31:0] mDataIn,
 	input BAout
 	//input wire [31:0] inPortIn,
@@ -60,10 +60,6 @@ module cpu_phase1(
   wire R15Out = 0;
   wire hiOut = 0;
   wire loOut = 0;
-  //wire zHighOut = 0;
-  //wire zLoOut = 0;
-  //wire pcOut = 0;
-  //wire MDRout = 0;
   wire inPortOut = 0;
   wire Cout = 0;
   
@@ -72,7 +68,7 @@ module cpu_phase1(
   //connect the input wires to the encoder using the concatenation operator
   //assign statement is used since these statements are always active
   //note, {8{1'b0}} is 8 zero bits
-  assign encoderInput = {{8{1'b0}}, Cout, inPortOut, MDRout, PCout, ZLowout, ZHighout, loOut, hiOut, R15Out,
+  assign encoderInput = {{8{1'b0}}, Cout, inPortOut, MDRout, PCout, ZLowOut, ZHighOut, loOut, hiOut, R15Out,
                          R14Out, R13Out, R12Out, R11Out, R10Out, R9Out, R8Out, R7Out, R6Out, R5Out, 
                          R4Out, R3Out, R2Out, R1Out, R0Out};
   
@@ -107,6 +103,8 @@ module cpu_phase1(
   wire [31:0] busMuxInY;
   wire [31:0] busMuxOutMDR;
   
+  wire [31:0] ALUInZHi, ALUInZLo;
+  
   //enable signals for registers
   wire R1Enable, /*R2Enable,*/ R3Enable, /*R4Enable, R5Enable,*/ R6Enable, R7Enable, R8Enable, R9Enable, 
   R10Enable, R11Enable, R12Enable, R13Enable, R14Enable, R15Enable, hiEnable, loEnable, zHiEnable, 
@@ -138,8 +136,8 @@ module cpu_phase1(
   
   GPReg hiReg(busMuxInHi, clk, clr, hiEnable, busMuxOut);
   GPReg loReg(busMuxInLo, clk, clr, loEnable, busMuxOut);
-  GPReg zHiReg(ALUInZHi, clk, clr, zHiEnable, busMuxOut);
-  GPReg zLoReg(ALUInZLo, clk, clr, zLoEnable, busMuxOut);
+  GPReg zHiReg(busMuxInZHi, clk, clr, Zin, ALUInZHi);
+  GPReg zLoReg(busMuxInZLo, clk, clr, Zin, ALUInZLo);
   GPReg pcReg(busMuxInPC, clk, clr, pcEnable, busMuxOut);
   GPReg inPortReg(busMuxInInPort, clk, clr, inPortEnable, busMuxOut);
   GPReg cReg(busMuxInC, clk, clr, CEnable, busMuxOut);
@@ -157,8 +155,8 @@ module cpu_phase1(
                 busMuxInR11, busMuxInR12, busMuxInR13, busMuxInR14, busMuxInR15, busMuxInHi,
                 busMuxInLo, busMuxInZHi, busMuxInZLo, busMuxInPC, busMuxInMDR, busMuxInInPort,
                 busMuxInC, R0Out, R1Out, R2Out, R3Out, R4Out, R5Out, R6Out, R7Out, R8Out, R9Out,
-                R10Out, R11Out, R12Out, R13Out, R14Out, R15Out, hiOut, loOut, zHighOut, zLoOut, 
-                pcOut, MDRout, inPortOut, Cout);
+                R10Out, R11Out, R12Out, R13Out, R14Out, R15Out, hiOut, loOut, ZHighOut, ZLowOut, 
+                PCout, MDRout, inPortOut, Cout);
   
   //MAR, IR, ???
   //alu
