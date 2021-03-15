@@ -3,35 +3,24 @@
 module MemSubSystem_tb;
 	reg Clocktb, Cleartb, MARintb, MDRintb, W_sigtb;
 	reg[31:0] BusMuxOuttb;
-	wire[31:0] BusMuxInMDRtb; //not sure what to do for this pipeline --> does BusMuxIn-MDR & Address need to be diff sig and inout?
+	wire[31:0] BusMuxInMDROutputtb;
+	
 
-	MemSubSystem MSblock(Clocktb, Cleartb, MARintb, MDRintb, W_sigtb, BusMuxOuttb, BusMuxInMDRtb);
-/*
-	always 		
-		begin
-		Clocktb = 1;
-		#20;
-		Clocktb = 0;
-		#20;
-	end
-
-	always @(posedge Clocktb) 
-		begin
-*/
+MemSubSystem MSblock(Clocktb, Cleartb, MARintb, MDRintb, W_sigtb, BusMuxOuttb, BusMuxInMDROutputtb);
 	initial
 		begin
 		Clocktb = 1;
 		Cleartb = 0; 
 		MARintb = 1; 
-		MDRintb = 1;
+		MDRintb = 0;
 		W_sigtb = 0; 
-		BusMuxOuttb = 32'b1111_0000_1111_0000_1111_0000_1111_0000; 
+		BusMuxOuttb = 32'b0; 
 		#50;
 		Clocktb = 1;
 		Cleartb = 0; 
 		MARintb = 1; 
 		MDRintb = 1;
 		W_sigtb = 1; 
-		BusMuxOuttb = 32'b0000_1111_0000_1111_0000_1111_0000_1111; 
+		BusMuxOuttb = 32'b0; 
 	end
 endmodule
